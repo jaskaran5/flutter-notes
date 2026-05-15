@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "543625397447",
+    "project_id": "socaillogins-791c0",
+    "storage_bucket": "socaillogins-791c0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:543625397447:android:117f9dccced23518af6ae2",
+        "android_client_info": {
+          "package_name": "com.socialLogin.social_login"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "543625397447-8md90rgbaq2dap7g4l9fnfe318i5bp79.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.socialLogin.social_login",
+            "certificate_hash": "f928d9c78f66f7433b89d1574b155cb5e1374dbe"
+          }
+        },
+        {
+          "client_id": "543625397447-ik4kfddk2ekk105gdvlb81moaeopdk1o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJHWPrP-YkwaLSZqwxxgT3U8cMgTXAXI4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "543625397447-ik4kfddk2ekk105gdvlb81moaeopdk1o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,183 @@
+import 'dart:convert';
+
+MyProfileModel myProfileModelFromJson(String str) =>
+    MyProfileModel.fromJson(json.decode(str));
+
+String myProfileModelToJson(MyProfileModel data) => json.encode(data.toJson());
+
+class MyProfileModel {
+  int? response;
+  dynamic message;
+  Data? data;
+
+  MyProfileModel({
+    this.response,
+    this.message,
+    this.data,
+  });
+
+  factory MyProfileModel.fromJson(Map<String, dynamic> json) => MyProfileModel(
+        response: json["response"],
+        message: json["message"],
+        data: json["data"] == null ? null : Data.fromJson(json["data"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "response": response,
+        "message": message,
+        "data": data?.toJson(),
+      };
+}
+
+class Data {
+  String? firstName;
+  String? lastName;
+  String? email;
+  int? userId;
+  String? name;
+  String? image;
+  int? gender;
+  int? reviewCount;
+  double? rating;
+  String? experience;
+  String? about;
+  String? highSchool;
+  String? college;
+  String? location;
+  String? mobileNo;
+  String? latitude;
+  String? longitude;
+  double? bonusReferrals;
+  List<String>? services;
+  int? age;
+  DateTime? dob;
+  dynamic isDrivingLicence;
+  List<RatingList>? ratingList;
+  bool? isVenmoDetailsAdded;
+
+  Data({
+    this.firstName,
+    this.lastName,
+    this.email,
+    this.userId,
+    this.name,
+    this.image,
+    this.gender,
+    this.reviewCount,
+    this.rating,
+    this.experience,
+    this.about,
+    this.highSchool,
+    this.college,
+    this.location,
+    this.mobileNo,
+    this.bonusReferrals,
+    this.services,
+    this.age,
+    this.isDrivingLicence,
+    this.ratingList,
+    this.dob,
+    this.latitude,
+    this.longitude,
+    this.isVenmoDetailsAdded,
+  });
+
+  factory Data.fromJson(Map<String, dynamic> json) => Data(
+        firstName: json["firstName"] ?? '',
+        lastName: json["lastName"] ?? '',
+        email: json["email"] ?? '',
+        userId: json["userId"] ?? '',
+        name: json["name"] ?? '',
+        image: json["image"],
+        gender: json["gender"],
+        reviewCount: json["reviewCount"],
+        rating: json["rating"],
+        experience: json["experience"],
+        about: json["about"] ?? '',
+        highSchool: json["highSchool"] ?? '',
+        college: json["college"] ?? '',
+        location: json["location"] ?? '',
+        mobileNo: json["mobileNo"] ?? '',
+        bonusReferrals: json["bonusReferrals"] ?? 0.0,
+        services: json["services"] == null
+            ? []
+            : List<String>.from(json["services"]!.map((x) => x)),
+        age: json["age"],
+        dob: json["dob"] == null ? null : DateTime.parse(json["dob"]),
+        isDrivingLicence: json["isDrivingLicence"],
+        ratingList: json["ratingList"] == null
+            ? []
+            : List<RatingList>.from(
+                json["ratingList"]!.map((x) => RatingList.fromJson(x))),
+        latitude: json["latitude"] ?? '',
+        longitude: json["longitude"] ?? '',
+        isVenmoDetailsAdded: json["isVenmoDeatilsAdded"] ?? false,
+      );
+
+  Map<String, dynamic> toJson() => {
+        "firstName": firstName,
+        "lastName": lastName,
+        "email": email,
+        "userId": userId,
+        "name": name,
+        "image": image,
+        "gender": gender,
+        "reviewCount": reviewCount,
+        "rating": rating,
+        "experience": experience,
+        "about": about,
+        "highSchool": highSchool,
+        "college": college,
+        "location": location,
+        "mobileNo": mobileNo,
+        "latitude": latitude,
+        "longitude": longitude,
+        "bonusReferrals": bonusReferrals,
+        "services":
+            services == null ? [] : List<dynamic>.from(services!.map((x) => x)),
+        "age": age,
+        "isDrivingLicence": isDrivingLicence,
+        "ratingList": ratingList == null
+            ? []
+            : List<dynamic>.from(ratingList!.map((x) => x.toJson())),
+        "dob": dob?.toIso8601String(),
+        "isVenmoDeatilsAdded": isVenmoDetailsAdded,
+      };
+}
+
+class RatingList {
+  String? name;
+  String? image;
+  String? review;
+  DateTime? datetime;
+  double? rating;
+  bool? isApprovedFromAdmin;
+
+  RatingList({
+    this.name,
+    this.image,
+    this.review,
+    this.datetime,
+    this.rating,
+    this.isApprovedFromAdmin,
+  });
+
+  factory RatingList.fromJson(Map<String, dynamic> json) => RatingList(
+        name: json["name"],
+        image: json["image"],
+        review: json["review"],
+        datetime:
+            json["datetime"] == null ? null : DateTime.parse(json["datetime"]),
+        rating: json["rating"],
+        isApprovedFromAdmin: json["isAprovedFromAdmin"] ?? false,
+      );
+
+  Map<String, dynamic> toJson() => {
+        "name": name,
+        "image": image,
+        "review": review,
+        "datetime": datetime?.toIso8601String(),
+        "rating": rating,
+        "isAprovedFromAdmin": isApprovedFromAdmin,
+      };
+}

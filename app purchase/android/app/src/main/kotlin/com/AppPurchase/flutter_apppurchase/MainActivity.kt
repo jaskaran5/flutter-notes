@@ -1,0 +1,6 @@
+package com.AppPurchase.flutter_apppurchase
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity: FlutterActivity() {
+}

@@ -1,0 +1,890 @@
+import 'dart:developer';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:northshore_nanny_flutter/app/modules/customer/get_nanny_profile/get_nanny_profile_controller.dart';
+import 'package:northshore_nanny_flutter/app/res/constants/assets.dart';
+import 'package:northshore_nanny_flutter/app/res/theme/dimens.dart';
+import 'package:northshore_nanny_flutter/app/utils/custom_toast.dart';
+import 'package:northshore_nanny_flutter/app/utils/helper.dart';
+import 'package:northshore_nanny_flutter/app/utils/translations/translation_keys.dart';
+import 'package:northshore_nanny_flutter/app/utils/utility.dart';
+import 'package:northshore_nanny_flutter/app/widgets/custom_app_bar.dart';
+import 'package:northshore_nanny_flutter/app/widgets/custom_button.dart';
+import 'package:northshore_nanny_flutter/app/widgets/custom_text_field.dart';
+import 'package:northshore_nanny_flutter/navigators/routes_management.dart';
+import 'package:table_calendar/table_calendar.dart';
+
+import '../../res/theme/colors.dart';
+import '../../res/theme/styles.dart';
+import '../../widgets/app_text.dart';
+import '../../widgets/custom_booking_receipt_tile.dart';
+
+class ScheduleNannyView extends StatelessWidget {
+  const ScheduleNannyView({super.key});
+
+  @override
+  Widget build(BuildContext context) => GetBuilder(
+      init: GetNannyProfileController(),
+      builder: (controller) {
+        return Scaffold(
+          appBar: CustomAppbarWidget(
+            title: TranslationKeys.scheduleNanny.tr,
+            onBackPress: () {
+              controller.startTime = null;
+              controller.endTime = null;
+              Get.back();
+            },
+          ),
+          body: Padding(
+            padding: Dimens.edgeInsets16,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryColor,
+                      borderRadius: BorderRadius.circular(Dimens.eight),
+                      border: Border.all(
+                        color: AppColors.dividerColor,
+                        width: Dimens.one,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.lightNavyBlue.withValues(alpha: .8),
+                          blurRadius: Dimens.five,
+                        )
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: Dimens.edgeInsetsL10R10,
+                          child: TableCalendar(
+                            sixWeekMonthsEnforced: true,
+                            availableGestures:
+                                AvailableGestures.horizontalSwipe,
+                            startingDayOfWeek: StartingDayOfWeek.monday,
+                            daysOfWeekStyle: DaysOfWeekStyle(
+                              weekdayStyle: AppStyles.ubHintColor13W500,
+                              weekendStyle: AppStyles.ubHintColor13W500,
+                            ),
+                            calendarStyle: CalendarStyle(
+                              isTodayHighlighted: false,
+                              defaultTextStyle: AppStyles.ubBlack15W600,
+                              weekendTextStyle: AppStyles.ubBlack15W600,
+                              outsideTextStyle: AppStyles.ubHintColor15W500,
+                              todayDecoration: const BoxDecoration(
+                                color: AppColors.navyBlue,
+                                shape: BoxShape.circle,
+                              ),
+                              selectedDecoration: const BoxDecoration(
+                                color: AppColors.navyBlue,
+                                shape: BoxShape.circle,
+                              ),
+                              markersMaxCount: 1,
+                              markerSize: Dimens.four,
+                              markersAutoAligned: true,
+                              markerMargin: Dimens.edgeInsets4,
+                              markersAlignment: Alignment.center,
+                              todayTextStyle: AppStyles.ubWhite15700,
+                              selectedTextStyle: AppStyles.ubWhite15700,
+                              markerDecoration: const BoxDecoration(
+                                  color: AppColors.navyBlue,
+                                  shape: BoxShape.circle),
+                            ),
+                            firstDay: DateTime.now(),
+                            lastDay: DateTime.utc(
+                              2050,
+                            ),
+                            headerStyle: HeaderStyle(
+                              titleTextStyle: AppStyles.ubBlack18W600,
+                              formatButtonVisible: false,
+                              titleCentered: true,
+                              leftChevronIcon:
+                                  SvgPicture.asset(Assets.iconsLeft),
+                              rightChevronIcon:
+                                  SvgPicture.asset(Assets.iconsRight),
+                            ),
+                            onDaySelected: (selectedDay, focusedDay) {
+                              log("selected day:--$selectedDay");
+                              log("focusedDay day:--$focusedDay");
+                              if (controller.isElementEqualToData(
+                                controller.getNannyData!.availabilityList ?? [],
+                                selectedDay.day,
+                                selectedDay.month,
+                              )) {
+                                /// used to update the  values of selected date and focus date.
+                                controller.updateSelectedDate(
+                                    date: selectedDay, focusDate: focusedDay);
+
+                                /// used to get the data by date.
+                                controller.getNannyDataByDate(
+                                    date: selectedDay,
+                                    nannyUserId: controller.getNannyData?.id);
+                              }
+                            },
+                            focusedDay: controller.focusedDay,
+                            selectedDayPredicate: (day) =>
+                                controller.selectedDate == day,
+                            eventLoader: (day) {
+                              return controller.isElementEqualToData(
+                                controller.getNannyData!.availabilityList ?? [],
+                                day.day,
+                                day.month,
+                              )
+                                  ? [
+                                      '.',
+                                    ]
+                                  : [];
+                            },
+                            onPageChanged: (focusedDay) {
+                              if (controller.isElementEqualToData(
+                                controller.getNannyData!.availabilityList ?? [],
+                                focusedDay.day,
+                                focusedDay.month,
+                              )) {
+                                controller.focusedDay = focusedDay;
+
+                                /// used to  call api when calender month change.
+                                controller.getNannyDetails(
+                                    time: focusedDay,
+                                    nannyUserID: controller.getNannyData?.id);
+                                controller.update();
+                              }
+                            },
+                          ),
+                        ),
+                        Divider(
+                          color: AppColors.dividerColor,
+                          height: Dimens.one,
+                        ),
+                        Padding(
+                          padding: Dimens.edgeInsets16,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AppText(
+                                text: Utility.getDay(
+                                  dateTime: controller.singleDay?.data
+                                          ?.bookingDetail?.openingTime ??
+                                      DateTime.now(),
+                                ),
+                                style: AppStyles.ubBlack30W600,
+                                maxLines: 1,
+                                textAlign: TextAlign.start,
+                              ),
+                              Dimens.boxWidth16,
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  AppText(
+                                    text: Utility.convertDateToMMMMYYYEEE(
+                                      controller.singleDay?.data?.bookingDetail
+                                              ?.openingTime ??
+                                          DateTime.now(),
+                                    ),
+                                    style: AppStyles.ubGrey12W400,
+                                    maxLines: 1,
+                                    textAlign: TextAlign.start,
+                                  ),
+                                  Dimens.boxHeight8,
+                                  AppText(
+                                    text:
+                                        '${Utility.formatTimeTo12Hour(controller.singleDay?.data?.bookingDetail?.openingTime.toString())} to ${Utility.formatTimeTo12Hour(controller.singleDay?.data?.bookingDetail?.closingTime.toString())}',
+                                    style: AppStyles.ubBlack14W700,
+                                    maxLines: 1,
+                                    textAlign: TextAlign.start,
+                                  )
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Divider(
+                          color: AppColors.dividerColor,
+                          height: Dimens.one,
+                        ),
+                        Padding(
+                          padding: Dimens.edgeInsets16,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SvgPicture.asset(Assets.iconsInfoGreen),
+                              Dimens.boxWidth10,
+                              Flexible(
+                                child: AppText(
+                                  text:
+                                      'This nanny is available from  ${Utility.formatTimeTo12Hour(controller.singleDay?.data?.bookingDetail?.openingTime.toString())} to ${Utility.formatTimeTo12Hour(controller.singleDay?.data?.bookingDetail?.closingTime.toString())} ',
+                                  maxLines: 2,
+                                  style: AppStyles.ubGreen12W600,
+                                  textAlign: TextAlign.start,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  Dimens.boxHeight16,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      GestureDetector(
+                        onTap: () async {
+                          TimeOfDay? bookingStartTime = await showTimePicker(
+                            context: Get.context!,
+                            initialEntryMode: TimePickerEntryMode.input,
+                            initialTime: controller.startTime != null
+                                ? controller.startTime!
+                                : Utility.convertDateTimeToTimeOfDay(controller
+                                        .singleDay
+                                        ?.data
+                                        ?.bookingDetail
+                                        ?.openingTime ??
+                                    DateTime.now()),
+                            builder: (context, child) => MediaQuery(
+                              data: MediaQuery.of(context)
+                                  .copyWith(alwaysUse24HourFormat: false),
+                              child: child!,
+                            ),
+                          );
+                          if (bookingStartTime != null) {
+                            final openingTime =
+                                Utility.convertDateTimeToTimeOfDay(controller
+                                    .singleDay!
+                                    .data!
+                                    .bookingDetail!
+                                    .openingTime!);
+                            final closingTime =
+                                Utility.convertDateTimeToTimeOfDay(controller
+                                    .singleDay!
+                                    .data!
+                                    .bookingDetail!
+                                    .closingTime!);
+                            if (isTimeBefore(bookingStartTime, openingTime) ||
+                                isTimeAfter(bookingStartTime, closingTime)) {
+                              toast(msg: "Invalid time slot", isError: true);
+                              controller.startTime =
+                                  Utility.convertDateTimeToTimeOfDay(controller
+                                          .singleDay
+                                          ?.data
+                                          ?.bookingDetail
+                                          ?.openingTime ??
+                                      DateTime.now());
+                            } else {
+                              controller.startTime = bookingStartTime;
+                            }
+                          }
+                          controller.update();
+                          log('Edit startTime:${controller.startTime}');
+                        },
+                        child: Container(
+                          height: Dimens.fiftyThree,
+                          width: Dimens.oneHundredFifty,
+                          padding: Dimens.edgeInsets8,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                              Dimens.eight,
+                            ),
+                            border: Border.all(
+                              color: AppColors.lightNavyBlue,
+                              width: Dimens.one,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SvgPicture.asset(
+                                Assets.iconsClock,
+                                height: Dimens.twenty,
+                                width: Dimens.twenty,
+                              ),
+                              Dimens.boxWidth10,
+                              AppText(
+                                text: controller.startTime == null
+                                    ? Utility.formatTimeTo12Hour(controller
+                                        .singleDay
+                                        ?.data
+                                        ?.bookingDetail
+                                        ?.openingTime
+                                        .toString())
+                                    : '${Utility.convertTo12HourFormat('${controller.startTime?.hour}:${controller.startTime?.minute}')} ${controller.startTime?.period.name.toUpperCase()}',
+                                style: AppStyles.ubBlack15W600,
+                                maxLines: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          TimeOfDay? bookingEndTime = await showTimePicker(
+                              context: Get.context!,
+                              initialEntryMode: TimePickerEntryMode.input,
+                              initialTime: controller.endTime != null
+                                  ? controller.endTime!
+                                  : Utility.convertDateTimeToTimeOfDay(
+                                      controller.singleDay?.data?.bookingDetail
+                                              ?.closingTime ??
+                                          DateTime.now()),
+                              builder: (context, child) => MediaQuery(
+                                    data: MediaQuery.of(context)
+                                        .copyWith(alwaysUse24HourFormat: false),
+                                    child: child!,
+                                  ));
+                          if (bookingEndTime != null) {
+                            final openingTime =
+                                Utility.convertDateTimeToTimeOfDay(controller
+                                    .singleDay!
+                                    .data!
+                                    .bookingDetail!
+                                    .openingTime!);
+                            final closingTime =
+                                Utility.convertDateTimeToTimeOfDay(controller
+                                    .singleDay!
+                                    .data!
+                                    .bookingDetail!
+                                    .closingTime!);
+                            if (isTimeBefore(bookingEndTime, openingTime) ||
+                                isTimeAfter(bookingEndTime, closingTime)) {
+                              toast(msg: "Invalid time slot", isError: true);
+                              controller.endTime =
+                                  Utility.convertDateTimeToTimeOfDay(controller
+                                          .singleDay
+                                          ?.data
+                                          ?.bookingDetail
+                                          ?.closingTime ??
+                                      DateTime.now());
+                            } else {
+                              controller.endTime = bookingEndTime;
+                            }
+                          }
+                          controller.update();
+                          log('Edit endTime:${controller.endTime}');
+                        },
+                        child: Container(
+                          height: Dimens.fiftyThree,
+                          width: Dimens.oneHundredFifty,
+                          padding: Dimens.edgeInsets8,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                              Dimens.eight,
+                            ),
+                            border: Border.all(
+                              color: AppColors.lightNavyBlue,
+                              width: Dimens.one,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SvgPicture.asset(
+                                Assets.iconsClock,
+                                height: Dimens.twenty,
+                                width: Dimens.twenty,
+                              ),
+                              Dimens.boxWidth10,
+                              AppText(
+                                text: controller.endTime == null
+                                    ? Utility.formatTimeTo12Hour(controller
+                                        .singleDay
+                                        ?.data
+                                        ?.bookingDetail
+                                        ?.closingTime
+                                        .toString())
+                                    : '${Utility.convertTo12HourFormat('${controller.endTime?.hour}:${controller.endTime?.minute}')} ${controller.endTime?.period.name.toUpperCase()}',
+                                style: AppStyles.ubBlack15W600,
+                                maxLines: 1,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (controller.singleDay?.data?.bookedSlot?.isNotEmpty ==
+                      true) ...[
+                    Dimens.boxHeight8,
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SvgPicture.asset(
+                          Assets.iconsInfoGreyCircle,
+                        ),
+                        Dimens.boxWidth8,
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Flexible(
+                              child: AppText(
+                                text:
+                                    'The nanny is not available ${controller.singleDay?.data?.bookedSlot?.map((e) => 'from ${Utility.formatTimeTo12Hour(e.openingTime.toString())} to ${Utility.formatTimeTo12Hour(e.closingTime.toString())} ').toList().join(',\n ')} ',
+                                maxLines: 2,
+                                style: AppStyles.ubHintColor12W500,
+                                textAlign: TextAlign.left,
+                              ),
+                            ),
+                          ],
+                        )
+                      ],
+                    ),
+                  ],
+                  Dimens.boxHeight16,
+
+                  TextField(
+                    onTap: () {
+                      controller.showMultiSelectDialogServices(context);
+                    },
+                    readOnly: true,
+                    controller: controller.typeOfServiceTextController,
+                    maxLines: 1,
+                    minLines: 1,
+                    decoration: customFieldDeco(
+                      suffix: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 40.0,
+                      ),
+                      hintText: "Type of service",
+                      prefixWidget: Padding(
+                        padding: Dimens.edgeInsets12,
+                        child: SvgPicture.asset(
+                          Assets.iconsBrifecaseCross,
+                          height: Dimens.ten,
+                          width: Dimens.ten,
+                        ),
+                      ),
+                    ),
+                    cursorColor: AppColors.blackColor,
+                    cursorWidth: Dimens.one,
+                    style: AppStyles.ubBlack15W600,
+                  ),
+
+                  Dimens.boxHeight16,
+
+                  //** SELECT CHILDREN */
+
+                  TextField(
+                    onTap: () {
+                      controller.showMultiSelectDialogChildren(context);
+                    },
+                    readOnly: true,
+                    controller: controller.selectChildrenTextController,
+                    maxLines: 1,
+                    minLines: 1,
+                    decoration: customFieldDeco(
+                      suffix: const Icon(
+                        Icons.keyboard_arrow_down_rounded,
+                        size: 40.0,
+                      ),
+                      hintText: "Select Children",
+                      prefixWidget: Padding(
+                        padding: Dimens.edgeInsets12,
+                        child: SvgPicture.asset(
+                          Assets.iconsBrifecaseCross,
+                          height: Dimens.ten,
+                          width: Dimens.ten,
+                        ),
+                      ),
+                    ),
+                    cursorColor: AppColors.blackColor,
+                    cursorWidth: Dimens.one,
+                    style: AppStyles.ubBlack15W600,
+                  ),
+
+                  if (controller.getNannyData?.isCustomerReferral == true) ...[
+                    Dimens.boxHeight16,
+                    Container(
+                      padding: Dimens.edgeInsets16,
+                      width: Get.width,
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryColor,
+                        borderRadius: BorderRadius.circular(Dimens.eight),
+                        border: Border.all(
+                          color: AppColors.dividerColor,
+                          width: Dimens.one,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.lightNavyBlue.withValues(alpha: .8),
+                            blurRadius: Dimens.five,
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(
+                            height: Dimens.twenty,
+                            width: Dimens.twenty,
+                            child: Checkbox(
+                              value: controller.isReferral,
+                              activeColor: AppColors.navyBlue,
+                              onChanged: (value) {
+                                controller.isReferral = value;
+                                controller.update();
+                              },
+                              shape: ContinuousRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                  Dimens.four,
+                                ),
+                                side: BorderSide(
+                                  color: AppColors.checkBoxBorderColor,
+                                  width: Dimens.one,
+                                ),
+                              ),
+                              side: BorderSide(
+                                color: AppColors.checkBoxBorderColor,
+                                width: Dimens.one,
+                              ),
+                            ),
+                          ),
+                          Dimens.boxWidth8,
+                          AppText(
+                            text: TranslationKeys.useReferralBonus.tr,
+                            style: AppStyles.ubGrey15W500,
+                            maxLines: 1,
+                            textAlign: TextAlign.left,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  Dimens.boxHeight16,
+
+                  ///-------------------->>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> RECEIPT DATA ------------>>>>>>>>
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryColor,
+                      borderRadius: BorderRadius.circular(Dimens.eight),
+                      border: Border.all(
+                        color: AppColors.dividerColor,
+                        width: Dimens.one,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.lightNavyBlue.withValues(alpha: .8),
+                          blurRadius: Dimens.five,
+                        )
+                      ],
+                    ),
+                    child: CustomBookingReceiptTile(
+                      receiptHeader: 'Receipt',
+                      shoBorder: false,
+                      showHeader: false,
+                      totalPriceReceived: controller
+                          .returnTotalPrice(
+                            servicesList: controller.selectedServices,
+                            totalMinutesPrice:
+                                Utility.returnPriceAccordingToMinuetBasis(
+                                    childCount:
+                                        controller.selectedChildList.length,
+                                    minuets:
+                                        Utility.calculateTotalMinutesDifference(
+                                            controller.startTime != null
+                                                ? controller.startTime ??
+                                                    TimeOfDay.now()
+                                                : Utility
+                                                    .convertDateTimeToTimeOfDay(
+                                                        controller
+                                                                .singleDay
+                                                                ?.data
+                                                                ?.bookingDetail
+                                                                ?.openingTime ??
+                                                            DateTime.now()),
+                                            controller.endTime != null
+                                                ? controller.endTime ??
+                                                    TimeOfDay.now()
+                                                : Utility.convertDateTimeToTimeOfDay(
+                                                    controller
+                                                            .singleDay
+                                                            ?.data
+                                                            ?.bookingDetail
+                                                            ?.closingTime ??
+                                                        DateTime.now()))),
+                            isIncludeServicesFee: true,
+                          )
+                          .toStringAsFixed(2),
+                      isReferralBonus: controller.isReferral ?? false,
+                      childCount: controller.selectedChildList.length,
+                      servicesList: controller.selectedServices,
+                      netPayBalAmount: controller.isReferral == true
+                          ? controller.totalPrice.value - 5
+                          : 0.0,
+                      serviceFees:
+                          controller.returnServiceFeeAccordingToTotalPrice(
+                        servicesList: controller.selectedServices,
+                        totalMinutesPrice:
+                            Utility.returnPriceAccordingToMinuetBasis(
+                                childCount: controller.selectedChildList.length,
+                                minuets: Utility.calculateTotalMinutesDifference(
+                                    controller.startTime != null
+                                        ? controller.startTime ??
+                                            TimeOfDay.now()
+                                        : Utility.convertDateTimeToTimeOfDay(
+                                            controller
+                                                    .singleDay
+                                                    ?.data
+                                                    ?.bookingDetail
+                                                    ?.openingTime ??
+                                                DateTime.now()),
+                                    controller.endTime != null
+                                        ? controller.endTime ?? TimeOfDay.now()
+                                        : Utility.convertDateTimeToTimeOfDay(
+                                            controller
+                                                    .singleDay
+                                                    ?.data
+                                                    ?.bookingDetail
+                                                    ?.closingTime ??
+                                                DateTime.now()))),
+                      ),
+                      totalTimeHour: Utility.calculateTotalMinutesDifference(
+                          controller.startTime != null
+                              ? controller.startTime ?? TimeOfDay.now()
+                              : Utility.convertDateTimeToTimeOfDay(controller
+                                      .singleDay
+                                      ?.data
+                                      ?.bookingDetail
+                                      ?.openingTime ??
+                                  DateTime.now()),
+                          controller.endTime != null
+                              ? controller.endTime ?? TimeOfDay.now()
+                              : Utility.convertDateTimeToTimeOfDay(controller
+                                      .singleDay
+                                      ?.data
+                                      ?.bookingDetail
+                                      ?.closingTime ??
+                                  DateTime.now())),
+                      totalTimeHourPrice:
+                          Utility.returnPriceAccordingToMinuetBasis(
+                              childCount: controller.selectedChildList.length,
+                              minuets: Utility.calculateTotalMinutesDifference(
+                                  controller.startTime != null
+                                      ? controller.startTime ?? TimeOfDay.now()
+                                      : Utility.convertDateTimeToTimeOfDay(
+                                          controller
+                                                  .singleDay
+                                                  ?.data
+                                                  ?.bookingDetail
+                                                  ?.openingTime ??
+                                              DateTime.now()),
+                                  controller.endTime != null
+                                      ? controller.endTime ?? TimeOfDay.now()
+                                      : Utility.convertDateTimeToTimeOfDay(
+                                          controller
+                                                  .singleDay
+                                                  ?.data
+                                                  ?.bookingDetail
+                                                  ?.closingTime ??
+                                              DateTime.now()))),
+                    ),
+                  ),
+                  Dimens.boxHeight16,
+                  CustomButton(
+                    title: TranslationKeys.confirmBooking.tr,
+                    backGroundColor: AppColors.navyBlue,
+                    onTap: () async {
+                      log('total Price:${controller.totalPrice}');
+                      log('start------> ${controller.selectedDate} ${controller.startTime} ${controller.endTime}');
+                      final timeOfDay = TimeOfDay.now();
+                      final now = DateTime.now();
+                      if (controller.selectedDate == null &&
+                          controller.startTime == null) {
+                        toast(
+                            msg: "Please select booking time slot.",
+                            isError: true);
+                        return;
+                      }
+                      final myBookingTime = DateTime(
+                          controller.selectedDate!.year,
+                          controller.selectedDate!.month,
+                          controller.selectedDate!.day,
+                          controller.startTime?.hour ??
+                              Utility.formatTimeOfDay(controller.singleDay?.data
+                                      ?.bookingDetail?.openingTime
+                                      .toString())
+                                  ?.hour ??
+                              0,
+                          controller.startTime?.minute ??
+                              Utility.formatTimeOfDay(controller.singleDay?.data
+                                      ?.bookingDetail?.openingTime
+                                      .toString())
+                                  ?.minute ??
+                              0);
+
+                      log(Utility.formatTimeOfDay(controller
+                              .singleDay?.data?.bookingDetail?.openingTime
+                              .toString())
+                          .toString());
+                      log(controller.startTime?.minute.toString() ?? '');
+
+                      if (!isTimeDifferenceGreaterThanOrEqualToOneHour(
+                          controller.endTime ??
+                              Utility.formatTimeOfDay(controller
+                                  .singleDay?.data?.bookingDetail?.closingTime
+                                  .toString()) ??
+                              timeOfDay,
+                          controller.startTime ??
+                              Utility.formatTimeOfDay(controller
+                                  .singleDay?.data?.bookingDetail?.openingTime
+                                  .toString()) ??
+                              timeOfDay)) {
+                        toast(
+                            msg:
+                                "Booking a nanny requires a minimum of 1 hour.",
+                            isError: true);
+                        return;
+                      }
+
+                      if (controller.selectedDate!.isSameDate(now) &&
+                          myBookingTime.isBefore(now)) {
+                        toast(
+                            msg:
+                                "Booking date and time has passed. Please select a future date and time for your booking.",
+                            isError: true);
+                        return;
+                      }
+
+                      /// used to store opening  time with date.
+                      final openingTime = DateFormat("yyyy-MM-dd HH:mm:ss")
+                          .parse(
+                              (controller.singleDay?.data?.bookingDetail
+                                          ?.openingTime ??
+                                      DateTime.now())
+                                  .toString(),
+                              true)
+                          .toLocal();
+                      DateTime startDate =
+                          controller.returnFinalTimeAccordingToDate(
+                              startTime: controller.startTime ??
+                                  TimeOfDay.fromDateTime(openingTime),
+                              day: openingTime);
+
+                      /// used to store closing  time with date.
+                      final closingTime = DateFormat("yyyy-MM-dd HH:mm:ss")
+                          .parse(
+                              (controller.singleDay?.data?.bookingDetail
+                                          ?.closingTime ??
+                                      DateTime.now())
+                                  .toString(),
+                              true)
+                          .toLocal();
+                      DateTime endDate =
+                          controller.returnFinalTimeAccordingToDate(
+                              startTime: controller.endTime ??
+                                  TimeOfDay.fromDateTime(closingTime),
+                              day: closingTime);
+                      log("startDate===$startDate");
+                      log("endDate===$endDate");
+                      var validator = await controller.confirmBookingValidator(
+                        servicesList: controller.selectedServices,
+                        childList: controller.selectedChildIds,
+                        openingTime: startDate,
+                        closingTime: endDate,
+                        nannyUserId:
+                            controller.getNannyData?.id.toString() ?? '',
+                      );
+
+                      if (validator == true) {
+                        await RouteManagement.goToCustomPaymentView(
+                            isComeFromConfirmBooking: true,
+                            isComeFromSendTip: false,
+                            isCardAdded: controller
+                                    .getNannyData?.isCardAddedByCustomer ??
+                                false,
+                            onTapSubmit: () {
+                              /// confirm booking api.
+                              controller.confirmBookingApi(
+                                hourlyPrice: Utility.returnPriceAccordingToMinuetBasis(
+                                    childCount:
+                                        controller.selectedChildList.length,
+                                    minuets: Utility.calculateTotalMinutesDifference(
+                                        controller.startTime != null
+                                            ? controller.startTime ??
+                                                TimeOfDay.now()
+                                            : Utility.convertDateTimeToTimeOfDay(
+                                                controller
+                                                        .singleDay
+                                                        ?.data
+                                                        ?.bookingDetail
+                                                        ?.openingTime ??
+                                                    DateTime.now()),
+                                        controller.endTime != null
+                                            ? controller.endTime ??
+                                                TimeOfDay.now()
+                                            : Utility.convertDateTimeToTimeOfDay(
+                                                controller
+                                                        .singleDay
+                                                        ?.data
+                                                        ?.bookingDetail
+                                                        ?.closingTime ??
+                                                    DateTime.now()))),
+                                isUseReferral: controller.isReferral ?? false,
+                                nannyUserId: controller.nannyId.value,
+                                totalMinutes:
+                                    Utility.calculateTotalMinutesDifference(
+                                        controller.startTime != null
+                                            ? controller.startTime ??
+                                                TimeOfDay.now()
+                                            : Utility
+                                                .convertDateTimeToTimeOfDay(
+                                                    controller
+                                                            .singleDay
+                                                            ?.data
+                                                            ?.bookingDetail
+                                                            ?.openingTime ??
+                                                        DateTime.now()),
+                                        controller.endTime != null
+                                            ? controller.endTime ??
+                                                TimeOfDay.now()
+                                            : Utility
+                                                .convertDateTimeToTimeOfDay(
+                                                    controller
+                                                            .singleDay
+                                                            ?.data
+                                                            ?.bookingDetail
+                                                            ?.closingTime ??
+                                                        DateTime.now())),
+                                totalPrice: double.parse(Utility.returnPriceAccordingToMinuetBasis(
+                                        childCount:
+                                            controller.selectedChildList.length,
+                                        minuets: Utility.calculateTotalMinutesDifference(
+                                            controller.startTime != null
+                                                ? controller.startTime ??
+                                                    TimeOfDay.now()
+                                                : Utility.convertDateTimeToTimeOfDay(controller
+                                                        .singleDay
+                                                        ?.data
+                                                        ?.bookingDetail
+                                                        ?.openingTime ??
+                                                    DateTime.now()),
+                                            controller.endTime != null
+                                                ? controller.endTime ??
+                                                    TimeOfDay.now()
+                                                : Utility.convertDateTimeToTimeOfDay(
+                                                    controller.singleDay?.data?.bookingDetail?.closingTime ??
+                                                        DateTime.now())))
+                                    .toString()),
+                                childIds: controller.selectedChildIds,
+                                openingTime: startDate,
+                                closingTime: endDate,
+                              );
+                            });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      });
+}

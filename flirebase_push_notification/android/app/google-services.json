@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "852314225692",
+    "project_id": "fir-pushnotification-fcb80",
+    "storage_bucket": "fir-pushnotification-fcb80.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:852314225692:android:a9a65ba34aade7a99a33d9",
+        "android_client_info": {
+          "package_name": "com.push_notification.flirebase_push_notification"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTeTp9X6o-jfxXirAfq436VFk1ofCHpNY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
